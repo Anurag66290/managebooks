@@ -1,12 +1,13 @@
 import createError from 'http-errors';
 import express from 'express';
+// import fs from 'fs';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import { MongoClient } from 'mongodb';
+import fileUpload from 'express-fileupload';;
 import indexRouter from './routes/index.js';
 import usersRouter from './routes/users.js';
-
+import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -17,32 +18,19 @@ const __dirname = dirname(__filename);
 const app = express();
 
 
+app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
 
-// Connection URI
-const uri =
-  'mongodb://localhost:27017/managecourse'
 
-// Create a new MongoClient
-const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// Set up default mongoose connection
+const mongoDB = 'mongodb://127.0.0.1/managecourse';
+mongoose.connect(mongoDB, { useNewUrlParser: true });
+console.log('db connected');
 
-const run = async () => {
-  try {
-    // Connect the client to the server
-    await client.connect();
+// Get the default connection
+const db = mongoose.connection;
 
-    // Establish and verify connection
-    await client.db('admin').command({ ping: 1 });
-    console.log('Connected successfully to server');
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
-  }
-};
-
-run().catch(console.dir);
+// Bind connection to error event (to get notification of connection errors)
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 
 // view engine setup
